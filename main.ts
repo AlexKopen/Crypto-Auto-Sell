@@ -1,6 +1,6 @@
 import Binance from 'binance-api-node'
 import * as dotEnv from 'dotenv'
-import logUpdate from "log-update"
+import logUpdate from 'log-update'
 
 dotEnv.config()
 
@@ -34,7 +34,7 @@ const main = async () => {
             High:\t$${high}
             Current:\t$${currentClose}
             Fall:\t${percentChange}%
-            Payout:\t$${payout}`.replace(/^ +| +$/gm, "")
+            Payout:\t$${payout}`.replace(/^ +| +$/gm, '')
         )
 
         if (percentChange < lossPercentage) {
