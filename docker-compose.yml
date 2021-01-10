@@ -1,0 +1,9 @@
+version: '3.4'
+services:
+  auto-sell:
+    build:
+      context: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm start

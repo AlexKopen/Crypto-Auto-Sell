@@ -1,24 +1,25 @@
 import Binance from 'binance-api-node'
 import * as dotEnv from 'dotenv'
-import logUpdate from "log-update";
+import logUpdate from "log-update"
 
 dotEnv.config()
 
-// Authenticated client, can make signed calls
 const client = Binance({
     apiKey: process.env.PUBLIC,
     apiSecret: process.env.PRIVATE,
     httpBase: 'https://api.binance.us',
     wsBase: 'wss://stream.binance.us:9443'
 })
-const lossPercentage = -25
-const symbol = 'ETH'
+const lossPercentage = +(process.env.LOSS_PERCENTAGE)
+const symbol = process.env.SYMBOL
 
-client.accountInfo().then(accountInfo => {
+const main = async () => {
+    const accountInfo = await client.accountInfo()
+
     const balance = +(accountInfo.balances.filter(balance => {
         return balance.asset === symbol
     })[0].free)
-    let high = 0;
+    let high = 0
 
     console.log(`${symbol} balance: ${balance}`)
 
@@ -39,11 +40,11 @@ client.accountInfo().then(accountInfo => {
                 type: 'MARKET',
                 quantity: balance.toFixed(2),
             }).then(orderResult => {
-                console.log(orderResult);
-                process.exit(1);
+                console.log(orderResult)
+                process.exit(1)
             })
         }
-
     })
+}
 
-})
+main()
