@@ -28,9 +28,14 @@ const main = async () => {
 
         high = Math.max(currentClose, high)
         const percentChange = +((((currentClose - high) / high) * 100).toFixed(2))
-        const payout = ((high - (high * (lossPercentage/100) * -1)) * balance).toFixed(2)
+        const payout = ((high - (high * (lossPercentage / 100) * -1)) * balance).toFixed(2)
 
-        logUpdate(`\nhigh: ${high}\n current: ${currentClose}\n percent: ${percentChange}%\n payout: $${payout}`)
+        logUpdate(`
+High: $${high}
+Current: $${currentClose}
+Fall: ${percentChange}%
+Payout: $${payout}`
+        )
 
         if (percentChange < lossPercentage) {
             // Sell
