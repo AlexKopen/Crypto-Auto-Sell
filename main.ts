@@ -31,12 +31,10 @@ const main = async () => {
         const payout = ((high - (high * (lossPercentage / 100) * -1)) * balance).toFixed(2)
 
         logUpdate(`
-            High: $${high}
-            Current: $${currentClose}
-            Fall: ${percentChange}%
-            Payout: $${payout}`.split(/\r?\n/)
-            .map(row => row.trim().split(/\s+/).join(','))
-            .join('\n')
+            High:\t$${high}
+            Current:\t$${currentClose}
+            Fall:\t${percentChange}%
+            Payout:\t$${payout}`.replace(/^ +| +$/gm, "")
         )
 
         if (percentChange < lossPercentage) {
