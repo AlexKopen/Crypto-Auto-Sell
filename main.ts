@@ -16,10 +16,10 @@ const symbol = process.env.SYMBOL
 const main = async () => {
     const accountInfo = await client.accountInfo()
 
-    const balance = +(accountInfo.balances.filter(balance => {
+    const balance = +(accountInfo.balances.find(balance => {
         return balance.asset === symbol
-    })[0].free)
-    let high = 0
+    }).free)
+    let high = +process.env.STARTING_HIGH
 
     console.log(`${symbol} balance: ${balance}`)
 
@@ -39,13 +39,19 @@ const main = async () => {
 
         if (percentChange < lossPercentage) {
             // Sell
+            const sellQuantity = Math.floor(balance).toFixed(2)
+            console.log(`Selling ${sellQuantity} ${symbol}`)
+
             client.order({
                 symbol: `${symbol}USDT`,
                 side: 'SELL',
                 type: 'MARKET',
-                quantity: balance.toFixed(2),
+                quantity: sellQuantity
             }).then(orderResult => {
                 console.log(orderResult)
+                process.exit(1)
+            }).catch(error => {
+                console.log(error)
                 process.exit(1)
             })
         }
