@@ -4,26 +4,25 @@ import logUpdate from 'log-update'
 
 dotEnv.config()
 
-const client = Binance({
-    apiKey: process.env.PUBLIC,
-    apiSecret: process.env.PRIVATE,
-    httpBase: 'https://api.binance.us',
-    wsBase: 'wss://stream.binance.us:9443'
-})
+const binanceClient = Binance()
 const lossPercentage = +(process.env.LOSS_PERCENTAGE)
 const symbol = process.env.SYMBOL
 
-const main = async () => {
-    const accountInfo = await client.accountInfo()
+const accountSid = process.env.PUBLIC
+const authToken = process.env.PRIVATE
+const twilioClient = require('twilio')(accountSid, authToken)
 
-    const balance = +(accountInfo.balances.find(balance => {
-        return balance.asset === symbol
-    }).free)
+let sendText = true
+let textsSent = 0
+
+const main = async () => {
+
+    const balance = +process.env.STARTING_BALANCE
     let high = +process.env.STARTING_HIGH
 
     console.log(`${symbol} balance: ${balance}`)
 
-    client.ws.candles([`${symbol}USDT`], '1m', candle => {
+    binanceClient.ws.candles([`${symbol}USDT`], '1m', candle => {
         const currentClose = +candle.close
 
         high = Math.max(currentClose, high)
@@ -31,29 +30,30 @@ const main = async () => {
         const payout = ((high - (high * (lossPercentage / 100) * -1)) * balance).toFixed(2)
 
         logUpdate(`
-            High:\t$${high}
+            High:\t\t$${high}
             Current:\t$${currentClose}
-            Fall:\t${percentChange}%
-            Payout:\t$${payout}`.replace(/^ +| +$/gm, '')
+            Fall:\t\t${percentChange}%
+            Payout:\t\t$${payout}
+            Texts:\t\t${textsSent}`.replace(/^ +| +$/gm, '')
         )
 
         if (percentChange < lossPercentage) {
-            // Sell
-            const sellQuantity = Math.floor(balance).toFixed(2)
-            console.log(`Selling ${sellQuantity} ${symbol}`)
+            if (sendText) {
+                twilioClient.messages
+                    .create({
+                        body: `${symbol} drop: ${percentChange}%`,
+                        from: process.env.FROM_NUMBER,
+                        to: process.env.TO_NUMBER
+                    })
+                    .then(() => {
+                        sendText = false
+                        textsSent++
 
-            client.order({
-                symbol: `${symbol}USDT`,
-                side: 'SELL',
-                type: 'MARKET',
-                quantity: sellQuantity
-            }).then(orderResult => {
-                console.log(orderResult)
-                process.exit(1)
-            }).catch(error => {
-                console.log(error)
-                process.exit(1)
-            })
+                        setTimeout(() => {
+                            sendText = true
+                        }, 30 * 60000)
+                    });
+            }
         }
     })
 }
